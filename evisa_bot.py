@@ -32,8 +32,12 @@ async def start(message):
                                             "Now you will receive the latest dates right in this chat.")
         except Exception as error:
             print(error)
+            await asyncio.sleep(0.1)
 
-    await bot.send_message(user_id, "Please stay tuned for new dates.\nAs soon as they appear - you will receive a notification in this chat.")
+    try:
+        await bot.send_message(user_id, "Please stay tuned for new dates.\nAs soon as they appear - you will receive a notification in this chat.")
+    except telebot.apihelper.ApiException as e:
+        print(e)
 
 
 @bot.message_handler(commands=['launch_bot'])
@@ -49,8 +53,12 @@ async def launch_bot(message):
                 await bot.send_message(user_id, "🤖 You have launched the bot. 🤖")
         except Exception as error:
             print(error)
+            await asyncio.sleep(0.1)
     else:
-        await bot.send_message(user_id, "You do not have permission to use this command.")
+        try:
+            await bot.send_message(user_id, "You do not have permission to use this command.")
+        except telebot.apihelper.ApiException as e:
+            print(e)
 
 
 @bot.message_handler(commands=['stop_bot'])
@@ -66,8 +74,13 @@ async def launch_bot(message):
                 await bot.send_message(user_id, "🤖 You have stopped the bot. 🤖")
         except Exception as error:
             print(error)
+            await asyncio.sleep(0.1)
     else:
-        await bot.send_message(user_id, "You do not have permission to use this command.")
+        try:
+            await bot.send_message(user_id, "You do not have permission to use this command.")
+        except telebot.apihelper.ApiException as e:
+            print(e)
+            await asyncio.sleep(0.1)
 
 
 class General_class:
@@ -287,7 +300,6 @@ async def work(browser):
 
             await asyncio.sleep(1.5)
             browser.get(procs_url)
-    browser.quit()
 
 
 async def get_data_from_website():
@@ -315,8 +327,10 @@ async def get_data_from_website():
                 browser.maximize_window()
                 try:
                     await work(browser)
+                    browser.quit()
                 except Exception as error:
                     print(error)
+                    browser.quit()
                 await asyncio.sleep(1)
             else:
                 browser.quit()
@@ -329,14 +343,17 @@ async def get_data_from_website():
 async def main_processes():
     try:
         while True:
-            await get_data_from_website()
+            try:
+                await get_data_from_website()
+            except Exception as error:
+                print(error)
             await asyncio.sleep(delay)
     except Exception as error:
         print(error)
 
 
 async def main():
-    bot_task = asyncio.create_task(bot.polling())
+    bot_task = asyncio.create_task(bot.polling(non_stop=True, request_timeout=120))
     data_mining_task = asyncio.create_task(main_processes())
 
     await asyncio.gather(bot_task, data_mining_task)
